@@ -1,4 +1,12 @@
-use actix_web::{get, web, App, HttpServer, Responder};
+use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder, Result};
+use bmkgw::cuaca::{self, Data, Domain, Province};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Location {
+    pub name: String,
+    pub url_param: String,
+}
 
 #[get("/hello/{name}")]
 async fn greet(name: web::Path<String>) -> impl Responder {
@@ -11,13 +19,29 @@ async fn get_gempa(kind: web::Path<String>) -> impl Responder {
 }
 
 #[get("/cuaca/{location}")]
-async fn get_cuaca(location: web::Path<String>) -> impl Responder {
-    format!("cuaca {}!", location)
+async fn get_cuaca(location: web::Path<String>) -> HttpResponse {
+    match Province::from_str(location.into_inner()) {
+        Some(url) => {
+            let data = cuaca::get_data(url).await;
+            match data {
+                Ok(val) => HttpResponse::Ok().json(val),
+                _ => HttpResponse::NotFound().body("cannot find location"),
+            }
+        }
+        None => HttpResponse::NotFound().body("cannot find location"),
+    }
 }
 
 #[get("/locations")]
-async fn get_locations() -> impl Responder {
-    format!("locations!")
+async fn get_locations() -> Result<impl Responder> {
+    let data: Vec<Location> = Domain::get_data()
+        .into_iter()
+        .map(|x| Location {
+            name: x.name,
+            url_param: x.value,
+        })
+        .collect();
+    Ok(web::Json(data))
 }
 
 #[actix_web::main] // or #[tokio::main]

@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.3.1"
+bmkgw = { git = "https://gitlab.com/akane10/bmkgw", branch = "master" }
+serde = "1.0.160"
+serde_json = "1.0.96"
