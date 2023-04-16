@@ -1,5 +1,6 @@
 use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder, Result};
 use bmkgw::cuaca::{self, Data, Domain, Province};
+use bmkgw::gempa::{self, Gempa, Url};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,7 +16,13 @@ async fn greet(name: web::Path<String>) -> impl Responder {
 
 #[get("/gempa/{kind}")]
 async fn get_gempa(kind: web::Path<String>) -> impl Responder {
-    format!("gempa {}!", kind)
+    match Url::from_str(kind.into_inner()) {
+        Some(url) => {
+            let data = gempa::get_data(url).await.unwrap();
+            HttpResponse::Ok().json(data)
+        }
+        None => HttpResponse::NotFound().body("cannot find gempa information"),
+    }
 }
 
 #[get("/cuaca/{location}")]
