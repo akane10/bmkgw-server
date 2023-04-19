@@ -3,6 +3,10 @@ use bmkgw::cuaca::{self, Data, Domain, Province};
 use bmkgw::gempa::{self, Gempa, Url};
 use serde::{Deserialize, Serialize};
 
+mod error;
+
+use error::Error;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Location {
     pub name: String,
@@ -15,27 +19,27 @@ async fn greet(name: web::Path<String>) -> impl Responder {
 }
 
 #[get("/gempa/{kind}")]
-async fn get_gempa(kind: web::Path<String>) -> impl Responder {
+async fn get_gempa(kind: web::Path<String>) -> Result<HttpResponse, error::Error> {
     match Url::from_str(kind.into_inner()) {
         Some(url) => {
-            let data = gempa::get_data(url).await.unwrap();
-            HttpResponse::Ok().json(data)
+            let data = gempa::get_data(url).await?;
+            Ok(HttpResponse::Ok().json(data))
         }
-        None => HttpResponse::NotFound().body("cannot find gempa information"),
+        None => Err(Error::NotFound("cannot find gempa information".to_string())),
     }
 }
 
 #[get("/cuaca/{location}")]
-async fn get_cuaca(location: web::Path<String>) -> HttpResponse {
+async fn get_cuaca(location: web::Path<String>) -> Result<HttpResponse, error::Error> {
     match Province::from_str(location.into_inner()) {
         Some(url) => {
             let data = cuaca::get_data(url).await;
             match data {
-                Ok(val) => HttpResponse::Ok().json(val),
-                _ => HttpResponse::NotFound().body("cannot find location"),
+                Ok(val) => Ok(HttpResponse::Ok().json(val)),
+                _ => Err(Error::NotFound("cannot find location".to_string())),
             }
         }
-        None => HttpResponse::NotFound().body("cannot find location"),
+        None => Err(Error::NotFound("cannot find location".to_string())),
     }
 }
 
