@@ -36,7 +36,7 @@ async fn get_cuaca(location: web::Path<String>) -> Result<HttpResponse, error::E
             let data = cuaca::get_data(url).await;
             match data {
                 Ok(val) => Ok(HttpResponse::Ok().json(val)),
-                _ => Err(Error::NotFound("cannot find location".to_string())),
+                Err(e) => Err(Error::BmkgwError(e)),
             }
         }
         None => Err(Error::NotFound("cannot find location".to_string())),
