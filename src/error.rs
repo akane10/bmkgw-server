@@ -15,10 +15,10 @@ impl ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
         match *self {
             Error::NotFound(ref message) => {
-                HttpResponse::NotFound().json(json!({ "data": message }))
+                HttpResponse::NotFound().json(json!({ "message": message }))
             }
             Error::BmkgwError(ref message) => {
-                HttpResponse::InternalServerError().json(message.to_string())
+                HttpResponse::InternalServerError().json(json!({ "message": message.to_string() }))
             }
         }
     }
