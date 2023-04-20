@@ -55,15 +55,22 @@ async fn get_locations() -> Result<impl Responder> {
     Ok(web::Json(data))
 }
 
+async fn not_found() -> Result<HttpResponse> {
+    Ok(HttpResponse::NotFound().body("Not Found"))
+}
+
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        App::new().service(greet).service(
-            web::scope("/api")
-                .service(get_gempa)
-                .service(get_cuaca)
-                .service(get_locations),
-        )
+        App::new()
+            .service(greet)
+            .service(
+                web::scope("/api")
+                    .service(get_gempa)
+                    .service(get_cuaca)
+                    .service(get_locations),
+            )
+            .default_service(web::route().to(not_found))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
