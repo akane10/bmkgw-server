@@ -1,6 +1,5 @@
-use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
+use actix_web::{error::ResponseError, HttpResponse};
 use serde_json::json;
-use serde_json::{Map as JsonMap, Value as JsonValue};
 use std::fmt;
 
 #[derive(Debug)]

@@ -1,6 +1,6 @@
-use actix_web::{get, http, web, App, HttpResponse, HttpServer, Responder, Result};
-use bmkgw::cuaca::{self, Data, Domain, Province};
-use bmkgw::gempa::{self, Gempa, Url};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
+use bmkgw::cuaca::{self, Domain, Province};
+use bmkgw::gempa::{self, Url};
 use serde::{Deserialize, Serialize};
 
 mod error;
@@ -19,7 +19,7 @@ async fn greet(name: web::Path<String>) -> impl Responder {
 }
 
 #[get("/gempa/{kind}")]
-async fn get_gempa(kind: web::Path<String>) -> Result<HttpResponse, error::Error> {
+async fn get_gempa(kind: web::Path<String>) -> Result<HttpResponse, Error> {
     match Url::from_str(kind.into_inner()) {
         Some(url) => {
             let data = gempa::get_data(url).await?;
@@ -30,7 +30,7 @@ async fn get_gempa(kind: web::Path<String>) -> Result<HttpResponse, error::Error
 }
 
 #[get("/cuaca/{location}")]
-async fn get_cuaca(location: web::Path<String>) -> Result<HttpResponse, error::Error> {
+async fn get_cuaca(location: web::Path<String>) -> Result<HttpResponse, Error> {
     match Province::from_str(location.into_inner()) {
         Some(url) => {
             let data = cuaca::get_data(url).await;
