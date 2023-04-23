@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{delete, get, post, web, App, HttpResponse, HttpServer, Responder, Result};
 use bmkgw::cuaca::{self, Domain, Province};
 use bmkgw::gempa::{self, Url};
 use redis;
@@ -92,7 +92,23 @@ async fn add_gempa_subscription(sub: web::Json<Sub>) -> Result<HttpResponse, Err
     let data: String = json!(*sub).to_string();
     con.set(auth, data)?;
 
-    Ok(HttpResponse::Ok().json(json!({ "message": "subscription has been added" })))
+    Ok(HttpResponse::Ok().finish())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubAuth {
+    pub auth: Option<String>,
+}
+#[delete("/gempa/notif")]
+async fn delete_gempa_subscription(sub_auth: web::Json<SubAuth>) -> Result<HttpResponse, Error> {
+    match &sub_auth.auth {
+        Some(v) => {
+            let mut con = conn_redis()?;
+            let _: () = con.del(v)?;
+            Ok(HttpResponse::Ok().finish())
+        }
+        _ => Ok(HttpResponse::BadRequest().finish()),
+    }
 }
 
 async fn not_found() -> Result<HttpResponse> {
@@ -109,7 +125,9 @@ async fn main() -> std::io::Result<()> {
                     .service(get_gempa)
                     .service(get_cuaca)
                     .service(get_locations)
-                    .service(get_gempa_key),
+                    .service(get_gempa_key)
+                    .service(add_gempa_subscription)
+                    .service(delete_gempa_subscription),
             )
             .default_service(web::route().to(not_found))
     })
