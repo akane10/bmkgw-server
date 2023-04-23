@@ -1,11 +1,19 @@
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
 use bmkgw::cuaca::{self, Domain, Province};
 use bmkgw::gempa::{self, Url};
+use redis;
+use redis::Commands;
 use serde::{Deserialize, Serialize};
 
 mod error;
 
 use error::Error;
+
+fn conn_redis() -> redis::RedisResult<redis::Connection> {
+    let client = redis::Client::open("redis://127.0.0.1/")?;
+    let con = client.get_connection()?;
+    Ok(con)
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Location {
@@ -55,6 +63,21 @@ async fn get_locations() -> Result<impl Responder> {
     Ok(web::Json(data))
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Res {
+    pub key: Option<String>,
+}
+#[get("/gempa/notif/pub_key")]
+async fn get_gempa_key() -> Result<HttpResponse, Error> {
+    let mut con = conn_redis()?;
+    let k = con.get("public_key");
+
+    match k {
+        Ok(v) => Ok(HttpResponse::Ok().json(Res { key: Some(v) })),
+        _ => Ok(HttpResponse::Ok().json(Res { key: None })),
+    }
+}
+
 async fn not_found() -> Result<HttpResponse> {
     Ok(HttpResponse::NotFound().body("Not Found"))
 }
@@ -68,7 +91,8 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/api")
                     .service(get_gempa)
                     .service(get_cuaca)
-                    .service(get_locations),
+                    .service(get_locations)
+                    .service(get_gempa_key),
             )
             .default_service(web::route().to(not_found))
     })

@@ -1,10 +1,12 @@
 use actix_web::{error::ResponseError, HttpResponse};
+use redis;
 use serde_json::json;
 use std::fmt;
 
 #[derive(Debug)]
 pub enum Error {
     BmkgwError(bmkgw::Error),
+    RedisError(redis::RedisError),
     NotFound(String),
 }
 
@@ -19,6 +21,9 @@ impl ResponseError for Error {
             Error::BmkgwError(ref message) => {
                 HttpResponse::InternalServerError().json(json!({ "message": message.to_string() }))
             }
+            Error::RedisError(ref message) => {
+                HttpResponse::InternalServerError().json(json!({ "message": message.to_string() }))
+            }
         }
     }
 }
@@ -28,6 +33,7 @@ impl fmt::Display for Error {
         match *self {
             Error::BmkgwError(ref x) => write!(f, "{}", x),
             Error::NotFound(ref x) => write!(f, "{}", x),
+            Error::RedisError(ref x) => write!(f, "{}", x),
         }
     }
 }
@@ -45,3 +51,4 @@ macro_rules! error_wrap {
 }
 
 error_wrap!(bmkgw::Error, Error::BmkgwError);
+error_wrap!(redis::RedisError, Error::RedisError);
