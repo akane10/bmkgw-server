@@ -7,9 +7,9 @@ use error::Error;
 use routes::cuaca::*;
 use routes::gempa::*;
 
-#[get("/hello/{name}")]
-async fn greet(name: web::Path<String>) -> impl Responder {
-    format!("Hello {}!", name)
+#[get("/")]
+async fn index() -> impl Responder {
+    format!("Hello!")
 }
 
 async fn not_found() -> Result<HttpResponse> {
@@ -20,15 +20,19 @@ async fn not_found() -> Result<HttpResponse> {
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(greet)
+            .service(index)
             .service(
                 web::scope("/api")
-                    .service(get_gempa)
-                    .service(get_cuaca)
-                    .service(get_locations)
-                    .service(get_gempa_key)
-                    .service(add_gempa_subscription)
-                    .service(delete_gempa_subscription),
+                    .service(web::scope("/cuaca").service(get_cuaca))
+                    .service(web::scope("/locations").service(get_locations))
+                    .service(
+                        web::scope("/gempa").service(get_gempa).service(
+                            web::scope("/notif")
+                                .service(get_gempa_key)
+                                .service(add_gempa_subscription)
+                                .service(delete_gempa_subscription),
+                        ),
+                    ),
             )
             .default_service(web::route().to(not_found))
     })

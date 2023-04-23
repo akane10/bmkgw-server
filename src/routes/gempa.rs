@@ -12,7 +12,7 @@ fn conn_redis() -> redis::RedisResult<redis::Connection> {
     Ok(con)
 }
 
-#[get("/gempa/{kind}")]
+#[get("/{kind}")]
 pub async fn get_gempa(kind: web::Path<String>) -> Result<HttpResponse, Error> {
     match Url::from_str(kind.into_inner()) {
         Some(url) => {
@@ -27,7 +27,7 @@ pub async fn get_gempa(kind: web::Path<String>) -> Result<HttpResponse, Error> {
 pub struct Res {
     pub key: Option<String>,
 }
-#[get("/gempa/notif/pub_key")]
+#[get("/pub_key")]
 pub async fn get_gempa_key() -> Result<HttpResponse, Error> {
     let mut con = conn_redis()?;
     let k = con.get("public_key");
@@ -44,7 +44,7 @@ pub struct Sub {
     pub p256dh: String,
     pub auth: String,
 }
-#[post("/gempa/notif")]
+#[post("")]
 pub async fn add_gempa_subscription(sub: web::Json<Sub>) -> Result<HttpResponse, Error> {
     let mut con = conn_redis()?;
     let auth = sub.auth.clone();
@@ -58,7 +58,7 @@ pub async fn add_gempa_subscription(sub: web::Json<Sub>) -> Result<HttpResponse,
 pub struct SubAuth {
     pub auth: Option<String>,
 }
-#[delete("/gempa/notif")]
+#[delete("")]
 pub async fn delete_gempa_subscription(
     sub_auth: web::Json<SubAuth>,
 ) -> Result<HttpResponse, Error> {
