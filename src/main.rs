@@ -1,9 +1,10 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result};
 use bmkgw::cuaca::{self, Domain, Province};
 use bmkgw::gempa::{self, Url};
 use redis;
 use redis::Commands;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 mod error;
 
@@ -76,6 +77,22 @@ async fn get_gempa_key() -> Result<HttpResponse, Error> {
         Ok(v) => Ok(HttpResponse::Ok().json(Res { key: Some(v) })),
         _ => Ok(HttpResponse::Ok().json(Res { key: None })),
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Sub {
+    pub endpoint: String,
+    pub p256dh: String,
+    pub auth: String,
+}
+#[post("/gempa/notif")]
+async fn add_gempa_subscription(sub: web::Json<Sub>) -> Result<HttpResponse, Error> {
+    let mut con = conn_redis()?;
+    let auth = sub.auth.clone();
+    let data: String = json!(*sub).to_string();
+    con.set(auth, data)?;
+
+    Ok(HttpResponse::Ok().json(json!({ "message": "subscription has been added" })))
 }
 
 async fn not_found() -> Result<HttpResponse> {
