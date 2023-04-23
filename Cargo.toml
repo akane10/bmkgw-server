@@ -11,3 +11,5 @@ bmkgw = { git = "https://gitlab.com/akane10/bmkgw", branch = "master" }
 serde = "1.0.160"
 serde_json = "1.0.96"
 redis = "0.23.0"
+actix-web-httpauth = "0.8.0"
+dotenv = "0.15.0"

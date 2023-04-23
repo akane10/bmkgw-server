@@ -7,6 +7,7 @@ use std::fmt;
 pub enum Error {
     BmkgwError(bmkgw::Error),
     RedisError(redis::RedisError),
+    ActixWebError(actix_web::Error),
     NotFound(String),
 }
 
@@ -24,6 +25,9 @@ impl ResponseError for Error {
             Error::RedisError(ref message) => {
                 HttpResponse::InternalServerError().json(json!({ "message": message.to_string() }))
             }
+            Error::ActixWebError(ref message) => {
+                HttpResponse::InternalServerError().json(json!({ "message": message.to_string() }))
+            }
         }
     }
 }
@@ -34,6 +38,7 @@ impl fmt::Display for Error {
             Error::BmkgwError(ref x) => write!(f, "{}", x),
             Error::NotFound(ref x) => write!(f, "{}", x),
             Error::RedisError(ref x) => write!(f, "{}", x),
+            Error::ActixWebError(ref x) => write!(f, "{}", x),
         }
     }
 }
@@ -52,3 +57,4 @@ macro_rules! error_wrap {
 
 error_wrap!(bmkgw::Error, Error::BmkgwError);
 error_wrap!(redis::RedisError, Error::RedisError);
+error_wrap!(actix_web::Error, Error::ActixWebError);
