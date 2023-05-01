@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::dev::ServiceRequest;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
 use actix_web_httpauth::extractors::basic::BasicAuth;
@@ -40,9 +41,15 @@ async fn validator(
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
-    HttpServer::new(move || {
+    HttpServer::new(|| {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allow_any_header();
+
         let basic_auth = HttpAuthentication::basic(validator);
         App::new()
+            .wrap(cors)
             .service(index)
             .service(
                 web::scope("/api")
