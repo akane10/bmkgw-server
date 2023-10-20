@@ -1,10 +1,12 @@
 use actix_cors::Cors;
 use actix_web::dev::ServiceRequest;
+use actix_web::middleware::Logger;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use actix_web_httpauth::extractors::basic::Config;
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::middleware::HttpAuthentication;
+use env_logger::Env;
 
 mod error;
 mod routes;
@@ -41,6 +43,8 @@ async fn validator(
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+
     HttpServer::new(|| {
         let cors = Cors::default()
             .allow_any_origin()
@@ -49,6 +53,7 @@ async fn main() -> std::io::Result<()> {
 
         let basic_auth = HttpAuthentication::basic(validator);
         App::new()
+            .wrap(Logger::default())
             .wrap(cors)
             .service(index)
             .service(
