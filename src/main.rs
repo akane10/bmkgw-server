@@ -43,6 +43,13 @@ async fn validator(
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
+    let port = match dotenv::var("PORT") {
+        Ok(val) => val.parse::<u16>().unwrap(),
+        Err(_) => 8000,
+    };
+
+    println!("port {}", port);
+
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     HttpServer::new(|| {
@@ -72,7 +79,7 @@ async fn main() -> std::io::Result<()> {
             )
             .default_service(web::route().to(not_found))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", port))?
     .run()
     .await
 }
