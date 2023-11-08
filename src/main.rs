@@ -1,7 +1,7 @@
 use actix_cors::Cors;
 use actix_web::dev::ServiceRequest;
 use actix_web::middleware::Logger;
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{get, middleware, web, App, HttpResponse, HttpServer, Responder, Result};
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use actix_web_httpauth::extractors::basic::Config;
 use actix_web_httpauth::extractors::AuthenticationError;
@@ -60,6 +60,7 @@ async fn main() -> std::io::Result<()> {
 
         let basic_auth = HttpAuthentication::basic(validator);
         App::new()
+            .wrap(middleware::DefaultHeaders::new().add(("Cache-Control", "max-age=600")))
             .wrap(Logger::default())
             .wrap(cors)
             .service(index)
