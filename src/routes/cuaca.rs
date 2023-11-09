@@ -29,5 +29,7 @@ pub async fn get_locations() -> Result<impl Responder, Error> {
             url_param: x.value,
         })
         .collect();
-    Ok(web::Json(data))
+    Ok(HttpResponse::Ok()
+        .insert_header(("Cache-Control", "max-age=172800")) // 2 days
+        .json(data))
 }
